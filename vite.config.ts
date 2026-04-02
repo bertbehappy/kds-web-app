@@ -4,6 +4,7 @@ import path from 'path';
 import {defineConfig, loadEnv} from 'vite';
 
 export default defineConfig(({mode}) => {
+    base: '/kds-web-app/', // 例如 '//kds-web-app'
   const env = loadEnv(mode, '.', '');
   return {
     plugins: [react(), tailwindcss()],
