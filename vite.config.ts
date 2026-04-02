@@ -4,9 +4,10 @@ import path from 'path';
 import {defineConfig, loadEnv} from 'vite';
 
 export default defineConfig(({mode}) => {
-    base: '/kds-web-app/', // 例如 '//kds-web-app'
+
   const env = loadEnv(mode, '.', '');
   return {
+          base: '/kds-web-app/', // 例如 '//kds-web-app'
     plugins: [react(), tailwindcss()],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
