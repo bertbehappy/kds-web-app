@@ -206,7 +206,7 @@ export const KDSItemAggregationGrid: React.FC = () => {
                   <div className="flex-1 min-w-0 pr-2">
                     <h3 className={cn(
                       "font-black tracking-tight truncate leading-tight",
-                      settings.fontSize === 'large' ? "text-3xl" : "text-2xl"
+                      settings.fontSize === 'large' ? "text-3xl" : "text-xl"
                     )}>
                       {cluster.name}
                     </h3>
@@ -216,7 +216,10 @@ export const KDSItemAggregationGrid: React.FC = () => {
                         {cluster.modifiers.map((mod, idx) => (
                           <span 
                             key={idx} 
-                            className="bg-white/80 border border-gray-200/50 text-xs px-2 py-0.5 rounded-md font-semibold text-gray-700"
+                            className={cn(
+                              "bg-white/80 border border-gray-200/50 rounded-md font-semibold text-gray-700",
+                              settings.fontSize === 'large' ? "text-base px-2.5 py-1" : "text-xs px-2 py-0.5"
+                            )}
                           >
                             {mod}
                           </span>
@@ -225,7 +228,10 @@ export const KDSItemAggregationGrid: React.FC = () => {
                     )}
 
                     {cluster.note && (
-                      <div className="text-sm font-bold text-amber-700 flex items-center gap-1 mt-1">
+                      <div className={cn(
+                        "font-bold text-amber-700 flex items-center gap-1 mt-1",
+                        settings.fontSize === 'large' ? "text-base" : "text-xs"
+                      )}>
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
                         {cluster.note}
                       </div>
@@ -238,7 +244,7 @@ export const KDSItemAggregationGrid: React.FC = () => {
                     currentTab === 'COMPLETED' 
                       ? "bg-gray-100 border-gray-300 text-gray-700" 
                       : "bg-red-500 text-white border-red-600 animate-pulse",
-                    settings.fontSize === 'large' ? "w-16 h-16 text-4xl" : "w-14 h-14 text-3xl"
+                    settings.fontSize === 'large' ? "w-20 h-20 text-5xl" : "w-14 h-14 text-3xl"
                   )}>
                     {cluster.totalQuantity}
                   </div>
@@ -246,7 +252,10 @@ export const KDSItemAggregationGrid: React.FC = () => {
 
                 {/* Sub-orders List */}
                 <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-50/50">
-                  <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1.5 flex justify-between px-1">
+                  <div className={cn(
+                    "text-gray-400 font-bold uppercase tracking-wider mb-1.5 flex justify-between px-1",
+                    settings.fontSize === 'large' ? "text-sm" : "text-xs"
+                  )}>
                     <span>關聯訂單</span>
                     <span>等待時間 / 數量</span>
                   </div>
@@ -261,21 +270,34 @@ export const KDSItemAggregationGrid: React.FC = () => {
                         className="flex items-center justify-between border border-gray-200 bg-white hover:bg-gray-50 p-2.5 rounded-lg shadow-sm transition-colors"
                       >
                         <div className="flex items-center gap-2">
-                          <span className="bg-gray-800 text-white font-extrabold px-2.5 py-1 rounded text-base">
+                          <span className={cn(
+                            "bg-gray-800 text-white font-extrabold rounded",
+                            settings.fontSize === 'large' ? "px-3.5 py-1.5 text-lg" : "px-2.5 py-1 text-base"
+                          )}>
                             #{occ.sequence}
                           </span>
-                          <span className="text-gray-400 text-xs font-medium">
+                          <span className={cn(
+                            "text-gray-400 font-medium",
+                            settings.fontSize === 'large' ? "text-sm" : "text-xs"
+                          )}>
                             {occ.orderNumber}
                           </span>
                         </div>
 
                         <div className="flex items-center gap-4">
                           {currentTab !== 'COMPLETED' && (
-                            <span className={cn("text-sm", timerColor)}>
+                            <span className={cn(
+                              "font-semibold",
+                              timerColor,
+                              settings.fontSize === 'large' ? "text-lg" : "text-sm"
+                            )}>
                               {orderElapsedMins}分
                             </span>
                           )}
-                          <span className="bg-red-50 text-red-600 border border-red-100 font-black px-2 py-0.5 rounded text-lg">
+                          <span className={cn(
+                            "bg-red-50 text-red-600 border border-red-100 font-black rounded",
+                            settings.fontSize === 'large' ? "px-3 py-1 text-xl" : "px-2 py-0.5 text-lg"
+                          )}>
                             {occ.quantity}份
                           </span>
 
@@ -288,13 +310,14 @@ export const KDSItemAggregationGrid: React.FC = () => {
                               }
                             }}
                             className={cn(
-                              "w-10 h-10 border-2 rounded-lg flex items-center justify-center active:scale-95 transition-all shadow-sm",
+                              "border-2 rounded-lg flex items-center justify-center active:scale-95 transition-all shadow-sm",
                               currentTab === 'COMPLETED'
                                 ? "border-gray-300 hover:border-gray-400 hover:bg-gray-100 text-gray-600"
-                                : "border-green-300 hover:border-green-400 text-green-600 bg-green-50 hover:bg-green-100"
+                                : "border-green-300 hover:border-green-400 text-green-600 bg-green-50 hover:bg-green-100",
+                              settings.fontSize === 'large' ? "w-12 h-12" : "w-10 h-10"
                             )}
                           >
-                            <Check size={20} className={currentTab === 'COMPLETED' ? "opacity-40" : "font-black"} />
+                            <Check size={settings.fontSize === 'large' ? 24 : 20} className={currentTab === 'COMPLETED' ? "opacity-40" : "font-black"} />
                           </button>
                         </div>
                       </div>

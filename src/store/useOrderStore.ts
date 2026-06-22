@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { Order, StationConfig, FulfillmentMode, STATIONS, OrderItem } from '../types/kds';
 import { generateInitialOrders } from '../services/mockData';
 import { realtimeService } from '../services/realtimeService';
+import { playNotificationSound } from '../utils/audio';
 
 interface ActionToast {
   id: string;
@@ -132,7 +133,11 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   
   togglePause: () => set(state => ({ isPaused: !state.isPaused })),
 
-  addOrder: (order) => set((state) => ({ orders: [...state.orders, order] })),
+  addOrder: (order) => set((state) => {
+    const soundType = state.settings.notificationSound || 'default';
+    playNotificationSound(soundType);
+    return { orders: [...state.orders, order] };
+  }),
 
   fulfillItem: (orderId, itemId) => {
     let completedItemName = '';
@@ -254,5 +259,12 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 realtimeService.subscribe((event) => {
   if (event.type === 'ORDER_CREATED') {
     useOrderStore.getState().addOrder(event.payload);
+  } else if (event.type === 'ORDER_UPDATED') {
+    const state = useOrderStore.getState();
+    const soundType = state.settings.notificationSound || 'default';
+    playNotificationSound(soundType);
+    useOrderStore.setState((s) => ({
+      orders: s.orders.map(o => o.id === event.payload.id ? event.payload : o)
+    }));
   }
 });

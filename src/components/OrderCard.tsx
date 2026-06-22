@@ -67,33 +67,49 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, stationItems }) => 
       )}
     >
       {/* Header */}
-      <div className="p-4 pb-3 flex flex-col gap-3 border-b-2 border-gray-100">
+      <div className="p-4 pb-3 flex flex-col gap-3 border-b-2 border-gray-100 bg-[#fafafa]">
         <div className="flex justify-between items-start">
           <div className="flex items-end gap-3 leading-none">
-            <span className="text-2xl font-bold text-gray-600">{order.sequence}.</span>
-            <span className="text-2xl font-bold text-gray-700">{order.type === 'DINE_IN' ? '內用' : order.type === 'TAKE_OUT' ? '外帶' : '外送'}</span>
-            <span className="text-3xl font-black text-gray-900 border-2 border-gray-400 px-3 py-1 rounded-md leading-none shrink-0 tracking-wider bg-gray-50">
+            <span className={cn("font-bold text-gray-600", settings.fontSize === 'large' ? "text-3xl" : "text-xl")}>{order.sequence}.</span>
+            <span className={cn("font-bold text-gray-700", settings.fontSize === 'large' ? "text-3xl" : "text-xl")}>{order.type === 'DINE_IN' ? '內用' : order.type === 'TAKE_OUT' ? '外帶' : '外送'}</span>
+            <span className={cn(
+              "font-black text-gray-900 border-2 border-gray-400 rounded-md leading-none shrink-0 tracking-wider bg-white shadow-sm",
+              settings.fontSize === 'large' ? "text-4xl px-4 py-1.5" : "text-2xl px-2.5 py-1"
+            )}>
               {order.orderNumber}
             </span>
           </div>
-          <div className={cn("flex items-center gap-1.5 font-bold text-2xl whitespace-nowrap", getTimerTextColor())}>
-            <Hourglass size={24} />
+          <div className={cn(
+            "flex items-center gap-1.5 font-bold whitespace-nowrap", 
+            getTimerTextColor(),
+            settings.fontSize === 'large' ? "text-3xl" : "text-xl"
+          )}>
+            <Hourglass size={settings.fontSize === 'large' ? 26 : 20} />
             {elapsedMins}分
           </div>
         </div>
         
         <div className="flex items-center gap-3 flex-wrap">
-          <span className="px-4 py-1.5 bg-blue-100 text-blue-900 text-xl rounded font-bold shadow-sm">
+          <span className={cn(
+            "bg-blue-100 text-blue-900 rounded font-bold shadow-sm",
+            settings.fontSize === 'large' ? "px-5 py-2 text-2xl" : "px-3 py-1.5 text-lg"
+          )}>
             {order.tableNumber || order.takeoutNumber || '-'}
           </span>
           {order.isAddOn && (
-            <span className="px-3 py-1 bg-amber-600 text-white text-base rounded-full font-bold shadow-sm">
+            <span className={cn(
+              "bg-amber-600 text-white rounded-full font-bold shadow-sm",
+              settings.fontSize === 'large' ? "px-4 py-1.5 text-lg" : "px-3 py-1 text-sm"
+            )}>
               加點 1
             </span>
           )}
           {order.status === 'CANCELLED' && (
-            <span className="text-red-600 flex items-center gap-1.5 font-bold text-lg ml-auto">
-              <XCircle size={22} /> 已取消
+            <span className={cn(
+              "text-red-600 flex items-center gap-1.5 font-bold ml-auto",
+              settings.fontSize === 'large' ? "text-xl" : "text-base"
+            )}>
+              <XCircle size={settings.fontSize === 'large' ? 24 : 18} /> 已取消
             </span>
           )}
         </div>
@@ -105,8 +121,8 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, stationItems }) => 
           onClick={() => setNotesOpen(!notesOpen)}
           className="w-full bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 flex items-center justify-between rounded shadow-sm transition-colors"
         >
-          <span className="text-base font-bold tracking-wide">備註 {order.note ? '' : '(無)'}</span>
-          {notesOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          <span className={cn("font-bold tracking-wide", settings.fontSize === 'large' ? "text-lg" : "text-sm")}>備註 {order.note ? '' : '(無)'}</span>
+          {notesOpen ? <ChevronUp size={settings.fontSize === 'large' ? 22 : 18} /> : <ChevronDown size={settings.fontSize === 'large' ? 22 : 18} />}
         </button>
         <AnimatePresence>
           {notesOpen && order.note && (
@@ -114,7 +130,10 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, stationItems }) => 
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="mt-2 p-3 border-2 border-gray-300 text-gray-700 text-lg font-medium bg-white rounded shadow-sm min-h-[80px]"
+              className={cn(
+                "mt-2 border-2 border-gray-300 text-gray-700 font-medium bg-white rounded shadow-sm",
+                settings.fontSize === 'large' ? "p-4 text-xl min-h-[90px]" : "p-3 text-base min-h-[70px]"
+              )}
             >
               {order.note}
             </motion.div>
@@ -143,22 +162,22 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, stationItems }) => 
           <div key={item.id} className={cn("py-4 flex items-start gap-4", idx > 0 && "border-t-2 border-gray-100")}>
             <div className={cn(
               "shrink-0 flex items-center justify-center font-bold border-2 border-gray-300 rounded-md bg-gray-50 text-gray-800 shadow-sm",
-              settings.fontSize === 'large' ? "w-12 h-12 text-3xl" : "w-10 h-10 text-xl"
+              settings.fontSize === 'large' ? "w-14 h-14 text-4xl" : "w-10 h-10 text-xl"
             )}>
               {item.quantity}
             </div>
             <div className="flex-1">
               <div className={cn(
                 "font-bold text-gray-900 leading-tight tracking-tight",
-                settings.fontSize === 'large' ? "text-3xl mb-2" : "text-xl mb-1"
+                settings.fontSize === 'large' ? "text-3xl mb-2" : "text-lg mb-1"
               )}>
                 {item.name}
               </div>
               {item.modifiers?.map((m, i) => (
-                <div key={i} className={cn("text-gray-500 font-medium", settings.fontSize === 'large' ? "text-lg mb-1" : "text-sm")}>{m}</div>
+                <div key={i} className={cn("text-gray-500 font-medium", settings.fontSize === 'large' ? "text-xl mb-1" : "text-sm")}>{m}</div>
               ))}
               {item.note && (
-                <div className={cn("text-amber-700 font-bold flex items-center gap-1.5", settings.fontSize === 'large' ? "text-lg mt-1.5" : "text-sm mt-1")}>
+                <div className={cn("text-amber-700 font-bold flex items-center gap-1.5", settings.fontSize === 'large' ? "text-xl mt-1.5" : "text-sm mt-1")}>
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
                   {item.note}
                 </div>
@@ -184,7 +203,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, stationItems }) => 
             
             <div className={cn(
               "shrink-0 flex items-center justify-center font-bold border-2 border-red-300 rounded-md bg-red-50 text-red-700 shadow-sm z-20",
-              settings.fontSize === 'large' ? "w-12 h-12 text-3xl" : "w-10 h-10 text-xl"
+              settings.fontSize === 'large' ? "w-14 h-14 text-4xl" : "w-10 h-10 text-xl"
             )}>
               {item.quantity}
             </div>
@@ -192,17 +211,17 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, stationItems }) => 
             <div className="flex-1 z-20">
               <div className={cn(
                 "font-bold text-red-600 line-through leading-tight tracking-tight",
-                settings.fontSize === 'large' ? "text-3xl mb-2" : "text-xl mb-1"
+                settings.fontSize === 'large' ? "text-3xl mb-2" : "text-lg mb-1"
               )}>
                 {item.name}
               </div>
               {item.modifiers?.map((m, i) => (
-                <div key={i} className={cn("text-red-500 line-through font-medium", settings.fontSize === 'large' ? "text-lg mb-1" : "text-sm")}>
+                <div key={i} className={cn("text-red-500 line-through font-medium", settings.fontSize === 'large' ? "text-xl mb-1" : "text-sm")}>
                   {m}
                 </div>
               ))}
               {item.note && (
-                <div className={cn("text-red-400 font-bold", settings.fontSize === 'large' ? "text-lg mt-1.5" : "text-sm mt-1")}>
+                <div className={cn("text-red-400 font-bold", settings.fontSize === 'large' ? "text-xl mt-1.5" : "text-sm mt-1")}>
                   {item.note}
                 </div>
               )}
@@ -231,22 +250,22 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, stationItems }) => 
           <div key={item.id} className={cn("py-4 flex items-start gap-4 opacity-50 relative group", (idx > 0 || pendingItems.length > 0 || cancelledItemsToRender.length > 0) && "border-t-2 border-gray-100")}>
             <div className={cn(
               "flex items-center justify-center font-bold border-2 border-gray-300 rounded-md bg-gray-50 text-gray-800 shadow-sm",
-              settings.fontSize === 'large' ? "w-12 h-12 text-3xl" : "w-10 h-10 text-xl"
+              settings.fontSize === 'large' ? "w-14 h-14 text-4xl" : "w-10 h-10 text-xl"
             )}>
               {item.quantity}
             </div>
             <div className="flex-1">
                <div className={cn(
                  "font-bold text-gray-700 leading-tight tracking-tight",
-                 settings.fontSize === 'large' ? "text-3xl mb-2" : "text-xl mb-1"
+                 settings.fontSize === 'large' ? "text-3xl mb-2" : "text-lg mb-1"
                )}>
                  {item.name}
                </div>
                {item.modifiers?.map((m, i) => (
-                <div key={i} className={cn("text-gray-400 font-medium", settings.fontSize === 'large' ? "text-lg mb-1" : "text-sm")}>{m}</div>
+                <div key={i} className={cn("text-gray-400 font-medium", settings.fontSize === 'large' ? "text-xl mb-1" : "text-sm")}>{m}</div>
               ))}
               {item.note && (
-                <div className={cn("text-gray-400 font-bold", settings.fontSize === 'large' ? "text-lg mt-1.5" : "text-sm mt-1")}>{item.note}</div>
+                <div className={cn("text-gray-400 font-bold", settings.fontSize === 'large' ? "text-xl mt-1.5" : "text-sm mt-1")}>{item.note}</div>
               )}
             </div>
             <button

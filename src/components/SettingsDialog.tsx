@@ -2,6 +2,7 @@ import React from 'react';
 import { useOrderStore } from '../store/useOrderStore';
 import { motion } from 'motion/react';
 import { X } from 'lucide-react';
+import { playNotificationSound } from '../utils/audio';
 
 interface SettingsDialogProps {
   onClose: () => void;
@@ -125,7 +126,11 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ onClose }) => {
             <span className="w-40">訂單調整通知音效</span>
             <select 
               value={localSettings.notificationSound}
-              onChange={(e) => setLocalSettings(s => ({ ...s, notificationSound: e.target.value }))}
+              onChange={(e) => {
+                const val = e.target.value;
+                setLocalSettings(s => ({ ...s, notificationSound: val }));
+                playNotificationSound(val);
+              }}
               className="border border-gray-300 rounded px-4 py-1.5 bg-white text-teal-600 focus:outline-none"
             >
               <option value="default">預設</option>

@@ -3,6 +3,7 @@ import { useOrderStore } from '../store/useOrderStore';
 import { generateMockOrder } from '../services/mockData';
 import { realtimeService } from '../services/realtimeService';
 import { Plus, Trash2, Settings, Zap, Play, Pause } from 'lucide-react';
+import { playNotificationSound } from '../utils/audio';
 
 export const DebugPanel: React.FC = () => {
   const { clearOrders, fulfillmentMode, setFulfillmentMode } = useOrderStore();
@@ -84,6 +85,9 @@ export const DebugPanel: React.FC = () => {
               } else {
                 // Otherwise, cancel the first pending item in the active order
                 const targetItem = targetOrder.items.find(i => i.status === 'PENDING')!;
+                // Play notification sound
+                const soundType = state.settings.notificationSound || 'default';
+                playNotificationSound(soundType);
                 useOrderStore.setState(s => ({
                   orders: s.orders.map(o => {
                     if (o.id !== targetOrder.id) return o;
