@@ -101,7 +101,27 @@ export const KDSGrid: React.FC = () => {
         return { ...order, stationItems };
       })
       .filter(order => order.stationItems.length > 0)
-      .filter(order => order.status === currentTab)
+      .filter(order => {
+        if (currentTab === 'PREP') {
+          // Keep in PREP if order status is not COMPLETED and there's either:
+          // - at least one pending item, OR
+          // - at least one cancelled item that hasn't been clicked "移除".
+          const hasPrepItems = order.stationItems.some(item => 
+            item.status === 'PENDING' || 
+            (item.status === 'CANCELLED' && !item.removedFromPrep)
+          );
+          return hasPrepItems && order.status !== 'COMPLETED';
+        } else if (currentTab === 'WAITLIST') {
+          return order.status === 'WAITLIST';
+        } else {
+          // COMPLETED tab:
+          const hasPrepItems = order.stationItems.some(item => 
+            item.status === 'PENDING' || 
+            (item.status === 'CANCELLED' && !item.removedFromPrep)
+          );
+          return order.status === 'COMPLETED' || (!hasPrepItems && order.status !== 'WAITLIST');
+        }
+      })
       .sort((a, b) => a.priority - b.priority);
   }, [orders, selectedStationIds, currentTab]);
 

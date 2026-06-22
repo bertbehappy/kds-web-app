@@ -16,7 +16,7 @@ interface OrderCardProps {
 }
 
 export const OrderCard: React.FC<OrderCardProps> = ({ order, stationItems }) => {
-  const { fulfillItem, undoFulfillItem, settings } = useOrderStore();
+  const { fulfillItem, undoFulfillItem, removeCancelledItem, settings, currentTab } = useOrderStore();
   const [elapsed, setElapsed] = useState(0);
   const [notesOpen, setNotesOpen] = useState(true);
 
@@ -42,7 +42,16 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, stationItems }) => 
   };
 
   const pendingItems = stationItems.filter(item => item.status === 'PENDING');
-  const completedItems = stationItems.filter(item => item.status === 'COMPLETED' || item.status === 'CANCELLED');
+  
+  const isPrepView = currentTab === 'PREP' || currentTab === 'WAITLIST';
+
+  const completedItemsToRender = isPrepView 
+    ? [] 
+    : stationItems.filter(item => item.status === 'COMPLETED');
+
+  const cancelledItemsToRender = isPrepView
+    ? stationItems.filter(item => item.status === 'CANCELLED' && !item.removedFromPrep)
+    : stationItems.filter(item => item.status === 'CANCELLED');
   
   if (stationItems.length === 0) return null;
 
@@ -167,10 +176,59 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, stationItems }) => 
           </div>
         ))}
 
-        {/* Render Completed/Cancelled Items with Strikethrough */}
-        {completedItems.map((item, idx) => (
-          <div key={item.id} className={cn("py-4 flex items-start gap-4 opacity-40 relative group", (idx > 0 || pendingItems.length > 0) && "border-t-2 border-gray-100")}>
-             <div className="absolute top-[32px] left-0 right-20 h-[3px] bg-red-600 z-10 rounded-full" />
+        {/* Render Cancelled/Refunded Items (退菜異動) */}
+        {cancelledItemsToRender.map((item, idx) => (
+          <div key={item.id} className={cn("py-4 flex items-start gap-4 relative", (idx > 0 || pendingItems.length > 0) && "border-t-2 border-gray-100")}>
+            {/* 刪除線 overlay */}
+            <div className="absolute top-[28px] left-0 right-24 h-[3px] bg-red-600/80 z-10 rounded-full" />
+            
+            <div className={cn(
+              "shrink-0 flex items-center justify-center font-bold border-2 border-red-300 rounded-md bg-red-50 text-red-700 shadow-sm z-20",
+              settings.fontSize === 'large' ? "w-12 h-12 text-3xl" : "w-10 h-10 text-xl"
+            )}>
+              {item.quantity}
+            </div>
+            
+            <div className="flex-1 z-20">
+              <div className={cn(
+                "font-bold text-red-600 line-through leading-tight tracking-tight",
+                settings.fontSize === 'large' ? "text-3xl mb-2" : "text-xl mb-1"
+              )}>
+                {item.name}
+              </div>
+              {item.modifiers?.map((m, i) => (
+                <div key={i} className={cn("text-red-500 line-through font-medium", settings.fontSize === 'large' ? "text-lg mb-1" : "text-sm")}>
+                  {m}
+                </div>
+              ))}
+              {item.note && (
+                <div className={cn("text-red-400 font-bold", settings.fontSize === 'large' ? "text-lg mt-1.5" : "text-sm mt-1")}>
+                  {item.note}
+                </div>
+              )}
+            </div>
+
+            {isPrepView ? (
+              <button
+                onClick={() => removeCancelledItem(order.id, item.id)}
+                className={cn(
+                  "shrink-0 border-2 border-red-400 rounded-xl shadow-sm bg-red-50 hover:bg-red-100 text-red-600 font-black tracking-wide flex items-center justify-center active:scale-95 transition-all z-20",
+                  settings.fontSize === 'large' ? "w-20 h-16 text-xl" : "w-16 h-12 text-base"
+                )}
+              >
+                移除
+              </button>
+            ) : (
+              <span className="text-red-600 font-black self-center px-3 py-1 bg-red-50 border border-red-200 rounded-md text-base z-20">
+                已退菜
+              </span>
+            )}
+          </div>
+        ))}
+
+        {/* Render Completed Items (僅在已出餐區顯示) */}
+        {completedItemsToRender.map((item, idx) => (
+          <div key={item.id} className={cn("py-4 flex items-start gap-4 opacity-50 relative group", (idx > 0 || pendingItems.length > 0 || cancelledItemsToRender.length > 0) && "border-t-2 border-gray-100")}>
             <div className={cn(
               "flex items-center justify-center font-bold border-2 border-gray-300 rounded-md bg-gray-50 text-gray-800 shadow-sm",
               settings.fontSize === 'large' ? "w-12 h-12 text-3xl" : "w-10 h-10 text-xl"
@@ -179,23 +237,23 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, stationItems }) => 
             </div>
             <div className="flex-1">
                <div className={cn(
-                 "font-bold text-gray-900 leading-tight tracking-tight",
+                 "font-bold text-gray-700 leading-tight tracking-tight",
                  settings.fontSize === 'large' ? "text-3xl mb-2" : "text-xl mb-1"
                )}>
                  {item.name}
                </div>
                {item.modifiers?.map((m, i) => (
-                <div key={i} className={cn("text-gray-500 font-medium", settings.fontSize === 'large' ? "text-lg mb-1" : "text-sm")}>{m}</div>
+                <div key={i} className={cn("text-gray-400 font-medium", settings.fontSize === 'large' ? "text-lg mb-1" : "text-sm")}>{m}</div>
               ))}
               {item.note && (
-                <div className={cn("text-gray-500 font-bold", settings.fontSize === 'large' ? "text-lg mt-1.5" : "text-sm mt-1")}>{item.note}</div>
+                <div className={cn("text-gray-400 font-bold", settings.fontSize === 'large' ? "text-lg mt-1.5" : "text-sm mt-1")}>{item.note}</div>
               )}
             </div>
             <button
-              title="取消完成"
+              title="重回製餐"
               onClick={() => undoFulfillItem(order.id, item.id)}
               className={cn(
-                "shrink-0 border-4 border-gray-300 rounded-xl shadow-sm bg-gray-100 flex items-center justify-center active:scale-95",
+                "shrink-0 border-4 border-gray-300 rounded-xl shadow-sm bg-gray-100 flex items-center justify-center active:scale-95 hover:bg-gray-200 transition-colors",
                 settings.fontSize === 'large' ? "w-16 h-16" : "w-12 h-12"
               )}
             >

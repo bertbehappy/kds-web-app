@@ -4,12 +4,13 @@ import { STATIONS } from './types/kds';
 import { StationSelector } from './components/StationSelector';
 import { SettingsDialog } from './components/SettingsDialog';
 import { KDSGrid } from './components/KDSGrid';
+import { KDSItemAggregationGrid } from './components/KDSItemAggregationGrid';
 import { DebugPanel } from './components/DebugPanel';
 import { Settings, Clock, PauseCircle, PlayCircle, Scissors, ScanLine, LayoutList, Grip, RefreshCcw, Undo2 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 
 export default function App() {
-  const { selectedStationIds, currentTab, setCurrentTab, isPaused, togglePause, activeToast, clearToast, orders } = useOrderStore();
+  const { selectedStationIds, setStations, currentTab, setCurrentTab, isPaused, togglePause, activeToast, clearToast, orders, viewMode, setViewMode } = useOrderStore();
   const [showSelector, setShowSelector] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [now, setNow] = useState(new Date());
@@ -28,11 +29,6 @@ export default function App() {
     const weekday = date.toLocaleDateString('zh-TW', { weekday: 'short' });
     return `${d} · ${weekday}`;
   };
-
-  // If no stations selected, force selector
-  if (selectedStationIds.length === 0) {
-    return <StationSelector />;
-  }
 
   // Calculate dynamic tab badges
   const activeCategories = STATIONS
@@ -75,12 +71,24 @@ export default function App() {
                     el.classList.add('scale-95');
                     setTimeout(() => el.classList.remove('scale-95'), 100);
                   }
+
+                  // Toggle active station
+                  let nextStations;
+                  if (isActive) {
+                    nextStations = selectedStationIds.filter(id => id !== s.id);
+                  } else {
+                    nextStations = [...selectedStationIds, s.id];
+                  }
+                  setStations(nextStations);
                 }}
                 id={`station-btn-${s.id}`}
                 className={`px-6 py-2.5 rounded-full font-bold text-lg transition-transform cursor-pointer relative ${
-                  isActive ? 'bg-red-600 text-white shadow-md' : 'bg-transparent text-gray-600 hover:bg-gray-100'
+                  isActive ? 'bg-red-600 text-white shadow-md hover:bg-red-700' : 'bg-transparent text-gray-600 hover:bg-gray-100'
                 }`}
               >
+                {isActive && (
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 border-2 border-white rounded-full animate-ping" />
+                )}
                 {s.name}
               </button>
             );
@@ -157,10 +165,24 @@ export default function App() {
         <div className="flex-1" />
         
         <div className="flex bg-white rounded-lg border-2 border-gray-300 p-1 mb-2 shadow-sm">
-          <button className="px-4 py-1.5 bg-gray-700 text-white text-base rounded shadow-sm flex items-center gap-2 font-bold">
+          <button 
+            onClick={() => setViewMode('ORDER')}
+            className={`px-4 py-1.5 text-base rounded flex items-center gap-2 font-bold transition-all cursor-pointer ${
+              viewMode === 'ORDER' 
+                ? 'bg-gray-700 text-white shadow-sm' 
+                : 'text-gray-600 hover:bg-gray-50'
+            }`}
+          >
             <LayoutList size={18} /> 依訂單
           </button>
-          <button className="px-4 py-1.5 text-gray-600 hover:bg-gray-50 text-base rounded flex items-center gap-2 font-bold">
+          <button 
+            onClick={() => setViewMode('ITEM')}
+            className={`px-4 py-1.5 text-base rounded flex items-center gap-2 font-bold transition-all cursor-pointer ${
+              viewMode === 'ITEM' 
+                ? 'bg-gray-700 text-white shadow-sm' 
+                : 'text-gray-600 hover:bg-gray-50'
+            }`}
+          >
             <Grip size={18} /> 依品項
           </button>
         </div>
@@ -168,7 +190,19 @@ export default function App() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden relative bg-[#f3f4f6]">
-        <KDSGrid />
+        {selectedStationIds.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center bg-white border-2 border-dashed border-gray-300 rounded-xl m-6 p-12 text-center shadow-sm">
+            <div className="text-6xl mb-4 animate-bounce">🍽️</div>
+            <div className="text-2xl font-black text-gray-800 mb-2">請選擇準備呈現的廚房站點</div>
+            <p className="text-base text-gray-400 max-w-md">
+              請點選上方標題列的 <span className="font-bold text-red-600 font-mono">「煎台」</span>、<span className="font-bold text-red-600 font-mono">「麵包台」</span> 或 <span className="font-bold text-red-600 font-mono">「點心台」</span> 按鈕，快速查看和管理對應站點的廚房餐點。
+            </p>
+          </div>
+        ) : viewMode === 'ITEM' ? (
+          <KDSItemAggregationGrid />
+        ) : (
+          <KDSGrid />
+        )}
 
         {/* Global Toast Area */}
         <AnimatePresence>
@@ -177,23 +211,25 @@ export default function App() {
               initial={{ opacity: 0, y: 50, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.9 }}
-              className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-gray-600 text-white px-5 py-3 rounded-lg shadow-xl flex items-center gap-4 z-50 text-sm font-medium"
+              className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-gray-600 text-white px-5 py-3 rounded-lg shadow-xl flex items-center gap-4 z-50 text-sm font-medium animate-bounce"
             >
               <span className="flex items-center gap-2">
-                <span className="text-gray-300">已完成</span>
-                {activeToast.message.replace('已完成 ', '')}
+                {!activeToast.hideUndo && <span className="text-gray-300">已完成</span>}
+                {activeToast.hideUndo ? activeToast.message : activeToast.message.replace('已完成 ', '')}
               </span>
-              <button 
-                onClick={() => {
-                  const { undoFulfillItem } = useOrderStore.getState();
-                  if (activeToast.orderId && activeToast.itemId) {
-                    undoFulfillItem(activeToast.orderId, activeToast.itemId);
-                  }
-                }}
-                className="bg-white text-gray-700 hover:bg-gray-100 px-3 py-1 rounded flex items-center gap-1 transition-colors"
-              >
-                <Undo2 size={14} /> 回復
-              </button>
+              {!activeToast.hideUndo && (
+                <button 
+                  onClick={() => {
+                    const { undoFulfillItem } = useOrderStore.getState();
+                    if (activeToast.orderId && activeToast.itemId) {
+                      undoFulfillItem(activeToast.orderId, activeToast.itemId);
+                    }
+                  }}
+                  className="bg-white text-gray-700 hover:bg-gray-100 px-3 py-1 rounded flex items-center gap-1 transition-colors"
+                >
+                  <Undo2 size={14} /> 回復
+                </button>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

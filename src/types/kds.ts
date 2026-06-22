@@ -12,6 +12,7 @@ export interface OrderItem {
   note?: string;
   status: ItemStatus;
   isAddOn?: boolean;
+  removedFromPrep?: boolean;
 }
 
 export interface Order {

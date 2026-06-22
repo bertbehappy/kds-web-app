@@ -9,6 +9,7 @@ interface ActionToast {
   orderId: string;
   itemId?: string;
   timer?: any;
+  hideUndo?: boolean;
 }
 
 interface SettingsState {
@@ -34,16 +35,19 @@ interface OrderState {
   currentTab: 'WAITLIST' | 'PREP' | 'COMPLETED';
   isPaused: boolean;
   activeToast: ActionToast | null;
+  viewMode: 'ORDER' | 'ITEM';
   
   // Actions
   setStations: (ids: string[]) => void;
   updateSettings: (settings: Partial<SettingsState>) => void;
   setFulfillmentMode: (mode: FulfillmentMode) => void;
+  setViewMode: (mode: 'ORDER' | 'ITEM') => void;
   setCurrentTab: (tab: 'WAITLIST' | 'PREP' | 'COMPLETED') => void;
   togglePause: () => void;
   addOrder: (order: Order) => void;
   fulfillItem: (orderId: string, itemId: string) => void;
   undoFulfillItem: (orderId: string, itemId: string) => void;
+  removeCancelledItem: (orderId: string, itemId: string) => void;
   reorderOrders: (orderIds: string[]) => void;
   clearOrders: () => void;
   clearToast: () => void;
@@ -104,6 +108,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   currentTab: 'PREP',
   isPaused: false,
   activeToast: null,
+  viewMode: 'ORDER',
 
   setStations: (ids) => {
     localStorage.setItem('kds_stations', JSON.stringify(ids));
@@ -120,6 +125,8 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     localStorage.setItem('kds_mode', mode);
     set({ fulfillmentMode: mode });
   },
+
+  setViewMode: (mode) => set({ viewMode: mode }),
 
   setCurrentTab: (tab) => set({ currentTab: tab }),
   
@@ -184,6 +191,42 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       });
 
       return { orders: newOrders, activeToast: null };
+    });
+  },
+
+  removeCancelledItem: (orderId, itemId) => {
+    set((state) => {
+      const newOrders = state.orders.map(order => {
+        if (order.id !== orderId) return order;
+        
+        const newItems = order.items.map(item => {
+          if (item.id !== itemId) return item;
+          return { ...item, removedFromPrep: true };
+        });
+
+        return { ...order, items: newItems };
+      });
+
+      return { orders: newOrders };
+    });
+
+    // Show specific toast for return (退菜移除) without undo button
+    const state = get();
+    if (state.activeToast?.timer) clearTimeout(state.activeToast.timer);
+    
+    const timer = setTimeout(() => {
+      set({ activeToast: null });
+    }, 4000);
+
+    set({
+      activeToast: {
+        id: Date.now().toString(),
+        message: '已將前台刪除品項移出視線',
+        orderId,
+        itemId,
+        timer,
+        hideUndo: true
+      }
     });
   },
 

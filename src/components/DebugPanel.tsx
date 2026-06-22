@@ -61,12 +61,47 @@ export const DebugPanel: React.FC = () => {
           </div>
           <button 
             onClick={() => setAutoGen(!autoGen)}
-            className={`w-full flex items-center justify-center gap-2 p-2 rounded-lg text-sm font-bold transition-colors ${
+            className={`w-full flex items-center justify-center gap-2 p-2 rounded-lg text-sm font-bold transition-colors mb-2 ${
               autoGen ? 'bg-green-600 text-white' : 'bg-slate-800 text-slate-300'
             }`}
           >
             {autoGen ? <Pause size={16} /> : <Play size={16} />}
             自動進單 (15s)
+          </button>
+          <button 
+            onClick={() => {
+              const state = useOrderStore.getState();
+              const prepOrders = state.orders.filter(o => o.status === 'PREP');
+              const targetOrder = prepOrders.find(o => o.items.some(i => i.status === 'PENDING'));
+              
+              if (!targetOrder) {
+                // If no active orders, simulate a new order with a cancelled item
+                const newOrder = generateMockOrder();
+                if (newOrder.items.length > 0) {
+                  newOrder.items[0].status = 'CANCELLED' as const;
+                }
+                realtimeService.simulateNewOrder(newOrder);
+              } else {
+                // Otherwise, cancel the first pending item in the active order
+                const targetItem = targetOrder.items.find(i => i.status === 'PENDING')!;
+                useOrderStore.setState(s => ({
+                  orders: s.orders.map(o => {
+                    if (o.id !== targetOrder.id) return o;
+                    return {
+                      ...o,
+                      items: o.items.map(it => {
+                        if (it.id !== targetItem.id) return it;
+                        return { ...it, status: 'CANCELLED' as const };
+                      })
+                    };
+                  })
+                }));
+              }
+            }}
+            className="w-full flex items-center justify-center gap-2 p-2 bg-rose-600 hover:bg-rose-500 text-white text-sm rounded-lg font-bold shadow transition-colors"
+          >
+            <Settings size={16} className="animate-spin" />
+            模擬前台退菜紅線
           </button>
         </div>
 
