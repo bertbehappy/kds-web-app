@@ -21,35 +21,35 @@ export const StationSelector: React.FC<{ onClose?: () => void }> = ({ onClose })
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-gray-500/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-slate-900 border-2 border-slate-700 p-8 rounded-3xl max-w-md w-full shadow-2xl"
+        className="bg-white border border-gray-200 p-8 rounded-xl max-w-md w-full shadow-2xl"
       >
         <div className="flex items-center gap-3 mb-6">
-          <Settings2 className="text-blue-400" size={32} />
-          <h2 className="text-3xl font-black text-white">站點選擇</h2>
+          <Settings2 className="text-red-500" size={32} />
+          <h2 className="text-2xl font-bold text-gray-900">站點選擇</h2>
         </div>
         
-        <p className="text-slate-400 mb-8">請選擇此 KDS 裝置要接收的廚房站點（可複選）：</p>
+        <p className="text-gray-600 mb-8 font-medium">請選擇此 KDS 裝置要接收的廚房站點（可複選）：</p>
         
         <div className="space-y-4 mb-8">
           {STATIONS.map(station => (
             <button
               key={station.id}
               onClick={() => toggleStation(station.id)}
-              className={`w-full p-5 rounded-2xl border-2 flex justify-between items-center transition-all ${
+              className={`w-full p-4 rounded-lg border-2 flex justify-between items-center transition-all ${
                 tempIds.includes(station.id)
-                  ? 'bg-blue-600/20 border-blue-500 text-white'
-                  : 'bg-slate-800 border-transparent text-slate-400 hover:bg-slate-750'
+                  ? 'bg-red-50 border-red-500 text-red-700'
+                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
               }`}
             >
-              <div className="text-left">
+              <div className="text-left leading-tight">
                 <div className="text-xl font-bold">{station.name}</div>
-                <div className="text-sm opacity-60">類別: {station.categories.join(', ')}</div>
+                <div className="text-sm opacity-80 mt-1">負責: {station.categories.join(', ')}</div>
               </div>
-              {tempIds.includes(station.id) && <Check size={24} />}
+              {tempIds.includes(station.id) && <Check size={24} className="text-red-600" />}
             </button>
           ))}
         </div>
@@ -57,9 +57,9 @@ export const StationSelector: React.FC<{ onClose?: () => void }> = ({ onClose })
         <button
           disabled={tempIds.length === 0}
           onClick={handleSave}
-          className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black text-xl rounded-2xl transition-all shadow-lg shadow-blue-900/20"
+          className="w-full py-3 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-lg rounded-lg transition-colors shadow-sm"
         >
-          進入系統
+          儲存並進入系統
         </button>
       </motion.div>
     </div>

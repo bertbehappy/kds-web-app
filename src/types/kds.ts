@@ -1,17 +1,22 @@
 export type OrderType = 'DINE_IN' | 'TAKE_OUT' | 'DELIVERY';
 export type ItemCategory = 'main' | 'drink' | 'dessert';
+export type OrderStatus = 'WAITLIST' | 'PREP' | 'COMPLETED' | 'CANCELLED';
+export type ItemStatus = 'PENDING' | 'COMPLETED' | 'CANCELLED';
 
 export interface OrderItem {
   id: string;
   name: string;
   quantity: number;
   category: ItemCategory;
+  modifiers?: string[];
   note?: string;
-  fulfilled: boolean;
+  status: ItemStatus;
+  isAddOn?: boolean;
 }
 
 export interface Order {
   id: string;
+  sequence: number;
   orderNumber: string;
   type: OrderType;
   tableNumber?: string;
@@ -21,6 +26,8 @@ export interface Order {
   createdAt: number; // timestamp
   items: OrderItem[];
   note?: string;
+  status: OrderStatus;
+  isAddOn?: boolean;
   priority: number; // Lower is higher priority
 }
 
@@ -31,9 +38,10 @@ export interface StationConfig {
 }
 
 export const STATIONS: StationConfig[] = [
-  { id: 'main_station', name: '主餐站', categories: ['main'] },
-  { id: 'drink_station', name: '飲料站', categories: ['drink'] },
-  { id: 'dessert_station', name: '甜點站', categories: ['dessert'] },
+  { id: 'grill', name: '煎台', categories: ['main'] },
+  { id: 'bread', name: '麵包台', categories: ['main'] },
+  { id: 'dessert', name: '點心台', categories: ['dessert'] },
+  { id: 'drink', name: '飲料台', categories: ['drink'] },
 ];
 
 export type FulfillmentMode = 'SINGLE' | 'CONFIRM';

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useOrderStore } from '../store/useOrderStore';
 import { STATIONS, Order } from '../types/kds';
 import { OrderCard } from './OrderCard';
-import { ChevronLeft, ChevronRight, ListFilter, GripVertical } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ListFilter, GripVertical, CircleDashed } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   DndContext,
@@ -40,17 +40,17 @@ const SortableOrderCard: React.FC<SortableItemProps> = ({ order }) => {
     transform: CSS.Transform.toString(transform),
     transition,
     zIndex: isDragging ? 50 : 1,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.7 : 1,
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="relative group">
+    <div ref={setNodeRef} style={style} className="relative group h-full">
       <div 
         {...attributes} 
         {...listeners}
-        className="absolute top-3 left-1/2 -translate-x-1/2 z-20 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing p-1 bg-slate-800/80 rounded border border-slate-700 text-slate-400 hover:text-white transition-opacity"
+        className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing p-1.5 bg-white/90 shadow text-gray-400 hover:text-gray-800 transition-opacity border border-gray-200 rounded-sm"
       >
-        <GripVertical size={16} />
+        <GripVertical size={20} />
       </div>
       <OrderCard order={order} stationItems={order.stationItems} />
     </div>
@@ -58,9 +58,23 @@ const SortableOrderCard: React.FC<SortableItemProps> = ({ order }) => {
 };
 
 export const KDSGrid: React.FC = () => {
-  const { orders, selectedStationIds, reorderOrders } = useOrderStore();
+  const { orders, selectedStationIds, reorderOrders, currentTab, settings } = useOrderStore();
   const [page, setPage] = useState(0);
-  const itemsPerPage = 6;
+
+  // Dynamic grid configuration
+  const gridClasses = {
+    '3x1': 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 grid-rows-1',
+    '3x2': 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 grid-rows-2',
+    '4x1': 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4 grid-rows-1',
+    '4x2': 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4 grid-rows-2',
+  }[settings.layout] || 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 grid-rows-2';
+
+  const itemsPerPage = {
+    '3x1': 3,
+    '3x2': 6,
+    '4x1': 4,
+    '4x2': 8,
+  }[settings.layout] || 6;
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -73,7 +87,7 @@ export const KDSGrid: React.FC = () => {
     })
   );
 
-  // Filter orders based on selected stations
+  // Filter orders based on selected stations and current tab
   const filteredOrders = useMemo(() => {
     const activeCategories = STATIONS
       .filter(s => selectedStationIds.includes(s.id))
@@ -82,49 +96,51 @@ export const KDSGrid: React.FC = () => {
     return orders
       .map(order => {
         const stationItems = order.items.filter(item => 
-          activeCategories.includes(item.category) && !item.fulfilled
+          activeCategories.includes(item.category)
         );
         return { ...order, stationItems };
       })
       .filter(order => order.stationItems.length > 0)
+      .filter(order => order.status === currentTab)
       .sort((a, b) => a.priority - b.priority);
-  }, [orders, selectedStationIds]);
+  }, [orders, selectedStationIds, currentTab]);
 
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  // Auto-cap page if items decrease
+  if (page >= totalPages && totalPages > 0) {
+    setPage(totalPages - 1);
+  }
   const currentOrders = filteredOrders.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
-
-  const handlePrev = () => setPage(p => Math.max(0, p - 1));
-  const handleNext = () => setPage(p => Math.min(totalPages - 1, p + 1));
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
-      const oldIndex = filteredOrders.findIndex((o) => o.id === active.id);
-      const newIndex = filteredOrders.findIndex((o) => o.id === over.id);
+      const oldIndex = filteredOrders.findIndex((o) => o.id === String(active.id));
+      const newIndex = filteredOrders.findIndex((o) => o.id === String(over.id));
       
-      const newFiltered = arrayMove(filteredOrders, oldIndex, newIndex);
+      const newFiltered = arrayMove<Order & { stationItems: any[] }>(filteredOrders, oldIndex, newIndex);
       reorderOrders(newFiltered.map(o => o.id));
     }
   };
 
   if (filteredOrders.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center text-slate-500 gap-4">
-        <ListFilter size={64} className="opacity-20" />
-        <p className="text-2xl font-bold">暫無訂單</p>
+      <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-4">
+        <CircleDashed size={80} className="opacity-20" />
+        <p className="text-3xl font-bold tracking-wider">目前分頁無訂單</p>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden p-4">
+    <div className="flex-1 flex flex-col overflow-hidden pb-4 px-2 pt-2 relative">
       {/* Grid */}
       <DndContext 
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 grid-rows-2 gap-4">
+        <div className={`flex-1 grid ${gridClasses} gap-4 content-start min-h-0`}>
           <SortableContext 
             items={currentOrders.map(o => o.id)} 
             strategy={rectSortingStrategy}
@@ -141,34 +157,38 @@ export const KDSGrid: React.FC = () => {
         </div>
       </DndContext>
 
-      {/* Pagination Controls */}
-      <div className="mt-4 flex items-center justify-between bg-slate-900 p-3 rounded-xl border border-slate-800">
-        <div className="flex items-center gap-4">
-          <span className="text-slate-400 font-bold">
-            第 {page + 1} 頁 / 共 {totalPages || 1} 頁
-          </span>
-          <span className="text-slate-600 text-sm">
-            (總計 {filteredOrders.length} 張訂單)
-          </span>
+      {/* Pagination Dots */}
+      {totalPages > 1 && (
+        <div className="absolute bottom-2 left-0 right-0 flex justify-center items-center gap-3 bg-gradient-to-t from-gray-100 to-transparent pt-4 pb-2">
+           <button 
+             onClick={() => setPage(p => Math.max(0, p - 1))}
+             disabled={page === 0}
+             className="p-1 text-gray-400 disabled:opacity-30 hover:text-gray-800"
+           >
+             <ChevronLeft size={24} />
+           </button>
+           
+           <div className="flex gap-2">
+             {Array.from({ length: totalPages }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setPage(i)}
+                  className={`w-3 h-3 rounded-full transition-colors ${
+                    i === page ? 'bg-red-600' : 'bg-gray-400 hover:bg-gray-600'
+                  }`}
+                />
+             ))}
+           </div>
+
+           <button 
+             onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+             disabled={page >= totalPages - 1}
+             className="p-1 text-gray-400 disabled:opacity-30 hover:text-gray-800"
+           >
+             <ChevronRight size={24} />
+           </button>
         </div>
-        
-        <div className="flex gap-2">
-          <button
-            disabled={page === 0}
-            onClick={handlePrev}
-            className="p-3 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-white transition-all active:scale-90"
-          >
-            <ChevronLeft size={24} />
-          </button>
-          <button
-            disabled={page >= totalPages - 1}
-            onClick={handleNext}
-            className="p-3 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-white transition-all active:scale-90"
-          >
-            <ChevronRight size={24} />
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
