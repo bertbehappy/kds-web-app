@@ -35,11 +35,30 @@ export default function App() {
     .filter(s => selectedStationIds.includes(s.id))
     .flatMap(s => s.categories);
 
-  const getFilteredCount = (status: 'WAITLIST' | 'PREP' | 'COMPLETED') => {
-    return orders.filter(o => 
-      o.status === status && 
-      o.items.some(item => activeCategories.includes(item.category))
-    ).length;
+  const getFilteredCount = (tabStatus: 'WAITLIST' | 'PREP' | 'COMPLETED') => {
+    return orders
+      .map(o => {
+        const stationItems = o.items.filter(item => activeCategories.includes(item.category));
+        return { ...o, stationItems };
+      })
+      .filter(o => o.stationItems.length > 0)
+      .filter(o => {
+        if (tabStatus === 'PREP') {
+          const hasPrepItems = o.stationItems.some(item => 
+            item.status === 'PENDING' || 
+            (item.status === 'CANCELLED' && !item.removedFromPrep)
+          );
+          return hasPrepItems && o.status !== 'COMPLETED';
+        } else if (tabStatus === 'WAITLIST') {
+          return o.status === 'WAITLIST';
+        } else {
+          const hasPrepItems = o.stationItems.some(item => 
+            item.status === 'PENDING' || 
+            (item.status === 'CANCELLED' && !item.removedFromPrep)
+          );
+          return o.status === 'COMPLETED' || (!hasPrepItems && o.status !== 'WAITLIST');
+        }
+      }).length;
   };
 
   return (
