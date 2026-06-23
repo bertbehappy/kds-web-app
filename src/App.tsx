@@ -99,11 +99,11 @@ export default function App() {
           <button 
             onClick={togglePause}
             className={`flex items-center gap-2 px-5 py-3 rounded-lg shadow-sm text-lg font-bold transition-colors ${
-              isPaused ? 'bg-teal-500 text-white' : 'bg-[#e53935] text-white hover:bg-red-700'
+              isPaused ? 'bg-teal-500 text-white hover:bg-teal-600' : 'bg-[#e53935] text-white hover:bg-red-700'
             }`}
           >
             {isPaused ? <PlayCircle size={22} /> : <PauseCircle size={22} />}
-            {isPaused ? '持續排入中 | 點擊暫停' : '暫停排入中 | 待排 6 張'}
+            {isPaused ? `已暫停排入 | 待排 ${getFilteredCount('WAITLIST')} 張` : '持續排入中 | 點擊暫停'}
           </button>
           
           <button 
@@ -123,7 +123,7 @@ export default function App() {
 
       {/* Warning bar if paused */}
       <AnimatePresence>
-        {!isPaused && (
+        {isPaused && (
            <motion.div 
              initial={{ height: 0, opacity: 0 }}
              animate={{ height: 'auto', opacity: 1 }}
