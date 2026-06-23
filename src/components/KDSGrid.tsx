@@ -112,7 +112,11 @@ export const KDSGrid: React.FC = () => {
           );
           return hasPrepItems && order.status !== 'COMPLETED';
         } else if (currentTab === 'WAITLIST') {
-          return order.status === 'WAITLIST';
+          const hasVisibleItems = order.stationItems.some(item => 
+            item.status === 'PENDING' || 
+            (item.status === 'CANCELLED' && !item.removedFromPrep)
+          );
+          return order.status === 'WAITLIST' && hasVisibleItems;
         } else {
           // COMPLETED tab:
           const hasPrepItems = order.stationItems.some(item => 

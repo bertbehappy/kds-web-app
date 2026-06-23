@@ -11,6 +11,8 @@ interface ActionToast {
   itemId?: string;
   timer?: any;
   hideUndo?: boolean;
+  quantity?: number;
+  itemName?: string;
 }
 
 interface SettingsState {
@@ -76,7 +78,7 @@ const getInitialSettings = (): SettingsState => {
       fontSize: 'large',
       layout: '3x1',
       notificationSound: 'default',
-      refreshInterval: 5,
+      refreshInterval: 10,
       warningTime1: 5,
       warningColor1: 'orange',
       warningTime2: 10,
@@ -92,7 +94,7 @@ const getInitialSettings = (): SettingsState => {
       fontSize: 'large',
       layout: '3x1',
       notificationSound: 'default',
-      refreshInterval: 5,
+      refreshInterval: 10,
       warningTime1: 5,
       warningColor1: 'orange',
       warningTime2: 10,
@@ -141,7 +143,8 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   fulfillItem: (orderId, itemId) => {
     let completedItemName = '';
-    
+    let completedItemQuantity = 1;
+
     set((state) => {
       const newOrders = state.orders.map(order => {
         if (order.id !== orderId) return order;
@@ -149,6 +152,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
         const newItems = order.items.map(item => {
           if (item.id !== itemId) return item;
           completedItemName = item.name;
+          completedItemQuantity = item.quantity;
           return { ...item, status: 'COMPLETED' as const };
         });
 
@@ -171,10 +175,12 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       set({
         activeToast: {
           id: Date.now().toString(),
-          message: `已完成 1 ${completedItemName}`,
+          message: `${completedItemQuantity} ${completedItemName} 已完成`,
           orderId,
           itemId,
-          timer
+          timer,
+          quantity: completedItemQuantity,
+          itemName: completedItemName
         }
       });
     }

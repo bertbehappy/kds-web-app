@@ -22,7 +22,7 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ onClose }) => {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gray-50 border-2 border-blue-400 p-0 max-w-3xl w-full shadow-2xl flex flex-col max-h-[90vh]"
+        className="bg-gray-50 border-2 border-blue-400 p-0 max-w-3xl w-full shadow-2xl flex flex-col max-h-[85vh] rounded-xl overflow-hidden"
       >
         <div className="bg-[#e4ebf5] px-4 py-3 border-b border-gray-300 font-bold text-gray-800 tracking-wide text-lg flex justify-between items-center shrink-0">
           <span>設定</span>
@@ -126,6 +126,20 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ onClose }) => {
                 >
                   4x1
                 </button>
+                <div className="w-px bg-gray-300"></div>
+                <button 
+                  onClick={() => setLocalSettings(s => ({ ...s, layout: '3x2' }))}
+                  className={`px-4 py-1.5 ${localSettings.layout === '3x2' ? 'bg-[#f8b163] text-white font-bold' : 'bg-white hover:bg-gray-50'}`}
+                >
+                  3x2
+                </button>
+                <div className="w-px bg-gray-300"></div>
+                <button 
+                  onClick={() => setLocalSettings(s => ({ ...s, layout: '4x2' }))}
+                  className={`px-4 py-1.5 ${localSettings.layout === '4x2' ? 'bg-[#f8b163] text-white font-bold' : 'bg-white hover:bg-gray-50'}`}
+                >
+                  4x2
+                </button>
               </div>
             </div>
 
@@ -154,9 +168,9 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ onClose }) => {
                   onChange={(e) => setLocalSettings(s => ({ ...s, refreshInterval: Number(e.target.value) }))}
                   className="border border-gray-300 rounded px-4 py-1.5 bg-white text-teal-600 focus:outline-none"
                 >
-                  <option value={5}>5</option>
                   <option value={10}>10</option>
                   <option value={30}>30</option>
+                  <option value={60}>60</option>
                 </select>
                 <span>秒</span>
               </div>

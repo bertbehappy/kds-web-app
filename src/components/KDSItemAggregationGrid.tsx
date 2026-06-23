@@ -68,7 +68,10 @@ export const KDSItemAggregationGrid: React.FC = () => {
         );
         matchTab = hasPrepItems && order.status !== 'COMPLETED';
       } else if (currentTab === 'WAITLIST') {
-        matchTab = order.status === 'WAITLIST';
+        const hasVisibleItems = order.items.some(item => 
+          activeCategories.includes(item.category) && (item.status === 'PENDING' || (item.status === 'CANCELLED' && !item.removedFromPrep))
+        );
+        matchTab = order.status === 'WAITLIST' && hasVisibleItems;
       } else {
         // COMPLETED tab
         const hasPrepItems = order.items.some(item => 
@@ -310,14 +313,21 @@ export const KDSItemAggregationGrid: React.FC = () => {
                               }
                             }}
                             className={cn(
-                              "border-2 rounded-lg flex items-center justify-center active:scale-95 transition-all shadow-sm",
+                              "border rounded flex flex-col items-center justify-center active:scale-95 transition-all shadow-sm leading-[1.2]",
                               currentTab === 'COMPLETED'
-                                ? "border-gray-300 hover:border-gray-400 hover:bg-gray-100 text-gray-600"
+                                ? "border-gray-800 bg-white hover:bg-gray-100 text-gray-900 font-normal"
                                 : "border-green-300 hover:border-green-400 text-green-600 bg-green-50 hover:bg-green-100",
-                              settings.fontSize === 'large' ? "w-12 h-12" : "w-10 h-10"
+                              settings.fontSize === 'large' ? "w-20 h-20 text-lg font-medium p-1" : "w-12 h-12 text-xs p-1"
                             )}
                           >
-                            <Check size={settings.fontSize === 'large' ? 24 : 20} className={currentTab === 'COMPLETED' ? "opacity-40" : "font-black"} />
+                            {currentTab === 'COMPLETED' ? (
+                              <>
+                                <span>重回</span>
+                                <span>製餐</span>
+                              </>
+                            ) : (
+                              <Check size={settings.fontSize === 'large' ? 24 : 20} className="font-black" />
+                            )}
                           </button>
                         </div>
                       </div>

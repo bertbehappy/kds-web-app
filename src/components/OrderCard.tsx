@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Order, OrderItem } from '../types/kds';
 import { useOrderStore } from '../store/useOrderStore';
-import { Hourglass, ChevronDown, ChevronUp, Check, XCircle, Undo2 } from 'lucide-react';
+import { Hourglass, ChevronDown, ChevronUp, Check, XCircle, Undo2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -68,8 +68,8 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, stationItems }) => 
     >
       {/* Header */}
       <div className="p-4 pb-3 flex flex-col gap-3 border-b-2 border-gray-100 bg-[#fafafa]">
-        <div className="flex justify-between items-start">
-          <div className="flex items-end gap-3 leading-none">
+        <div className="flex justify-between items-start flex-wrap gap-2">
+          <div className="flex items-end gap-3 leading-none pr-2">
             <span className={cn("font-bold text-gray-600", settings.fontSize === 'large' ? "text-3xl" : "text-xl")}>{order.sequence}.</span>
             <span className={cn("font-bold text-gray-700", settings.fontSize === 'large' ? "text-3xl" : "text-xl")}>{order.type === 'DINE_IN' ? '內用' : order.type === 'TAKE_OUT' ? '外帶' : '外送'}</span>
             <span className={cn(
@@ -79,13 +79,43 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, stationItems }) => 
               {order.orderNumber}
             </span>
           </div>
-          <div className={cn(
-            "flex items-center gap-1.5 font-bold whitespace-nowrap", 
-            getTimerTextColor(),
-            settings.fontSize === 'large' ? "text-3xl" : "text-xl"
-          )}>
-            <Hourglass size={settings.fontSize === 'large' ? 26 : 20} />
-            {elapsedMins}分
+          <div className="flex items-center gap-2 shrink-0 ml-auto">
+            {currentTab === 'WAITLIST' && stationItems.every(i => i.status === 'CANCELLED') ? (
+              <button
+                onClick={() => {
+                  stationItems.forEach(i => {
+                    if (i.status === 'CANCELLED') removeCancelledItem(order.id, i.id);
+                  });
+                }}
+                className={cn(
+                  "font-bold bg-white text-red-600 border-2 border-red-200 hover:bg-red-50 rounded flex items-center justify-center gap-1 shadow-sm transition-colors",
+                  settings.fontSize === 'large' ? "px-4 py-2 text-xl" : "px-3 py-1.5 text-lg"
+                )}
+              >
+                <X size={settings.fontSize === 'large' ? 24 : 20} className="stroke-[3]" /> 移除顯示
+              </button>
+            ) : currentTab === 'WAITLIST' && pendingItems.length > 0 ? (
+              <button
+                onClick={() => {
+                  pendingItems.forEach(i => fulfillItem(order.id, i.id));
+                }}
+                className={cn(
+                  "font-bold bg-white text-green-600 border-2 border-green-500 hover:bg-green-50 rounded flex items-center justify-center gap-1 shadow-sm transition-colors",
+                  settings.fontSize === 'large' ? "px-4 py-2 text-xl" : "px-3 py-1.5 text-lg"
+                )}
+              >
+                <Check size={settings.fontSize === 'large' ? 24 : 20} className="stroke-[3]" /> 全部完成 {pendingItems.length}
+              </button>
+            ) : (
+              <div className={cn(
+                "flex items-center gap-1.5 font-bold whitespace-nowrap", 
+                getTimerTextColor(),
+                settings.fontSize === 'large' ? "text-3xl" : "text-xl"
+              )}>
+                <Hourglass size={settings.fontSize === 'large' ? 26 : 20} />
+                {elapsedMins}分
+              </div>
+            )}
           </div>
         </div>
         
@@ -269,22 +299,21 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, stationItems }) => 
               )}
             </div>
             <button
-              title="重回製餐"
               onClick={() => undoFulfillItem(order.id, item.id)}
               className={cn(
-                "shrink-0 border-4 border-gray-300 rounded-xl shadow-sm bg-gray-100 flex items-center justify-center active:scale-95 hover:bg-gray-200 transition-colors",
-                settings.fontSize === 'large' ? "w-16 h-16" : "w-12 h-12"
+                "shrink-0 border border-gray-800 rounded bg-white flex flex-col items-center justify-center active:scale-95 hover:bg-gray-100 transition-colors text-gray-900 leading-[1.2]",
+                settings.fontSize === 'large' ? "w-20 h-20 text-xl font-medium" : "w-12 h-12 text-xs font-normal"
               )}
             >
-              <Check size={settings.fontSize === 'large' ? 40 : 28} className="text-green-600 group-hover:hidden" />
-              <Undo2 size={settings.fontSize === 'large' ? 32 : 24} className="text-gray-600 hidden group-hover:block" />
+              <span>重回</span>
+              <span>製餐</span>
             </button>
           </div>
         ))}
       </div>
 
       {/* Footer Button */}
-      {pendingItems.length > 0 && (
+      {currentTab !== 'WAITLIST' && pendingItems.length > 0 && (
          <div className="p-3 border-t-2 border-gray-100 mt-auto shrink-0 bg-gray-50">
            <button 
              onClick={() => {

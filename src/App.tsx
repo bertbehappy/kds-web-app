@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useOrderStore } from './store/useOrderStore';
 import { STATIONS } from './types/kds';
-import { StationSelector } from './components/StationSelector';
 import { SettingsDialog } from './components/SettingsDialog';
 import { KDSGrid } from './components/KDSGrid';
 import { KDSItemAggregationGrid } from './components/KDSItemAggregationGrid';
 import { DebugPanel } from './components/DebugPanel';
-import { Settings, Clock, PauseCircle, PlayCircle, Scissors, ScanLine, LayoutList, Grip, RefreshCcw, Undo2 } from 'lucide-react';
+import { Settings, Clock, PauseCircle, PlayCircle, Scissors, ScanLine, LayoutList, Grip, Maximize, Undo2 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 
 export default function App() {
   const { selectedStationIds, setStations, currentTab, setCurrentTab, isPaused, togglePause, activeToast, clearToast, orders, viewMode, setViewMode } = useOrderStore();
-  const [showSelector, setShowSelector] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [now, setNow] = useState(new Date());
 
@@ -28,6 +26,18 @@ export default function App() {
     const d = date.toLocaleDateString('zh-TW', { month: 'short', day: 'numeric' });
     const weekday = date.toLocaleDateString('zh-TW', { weekday: 'short' });
     return `${d} · ${weekday}`;
+  };
+
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.warn(`Error attempting to enable full-screen mode: ${err.message}`);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
   };
 
   // Calculate dynamic tab badges
@@ -50,7 +60,11 @@ export default function App() {
           );
           return hasPrepItems && o.status !== 'COMPLETED';
         } else if (tabStatus === 'WAITLIST') {
-          return o.status === 'WAITLIST';
+          const hasVisibleItems = o.stationItems.some(item => 
+            item.status === 'PENDING' || 
+            (item.status === 'CANCELLED' && !item.removedFromPrep)
+          );
+          return o.status === 'WAITLIST' && hasVisibleItems;
         } else {
           const hasPrepItems = o.stationItems.some(item => 
             item.status === 'PENDING' || 
@@ -66,19 +80,19 @@ export default function App() {
       
       {/* Top Header */}
       <header className="min-h-[60px] bg-white border-b border-gray-300 flex flex-col md:flex-row items-stretch shrink-0">
-        <div className="w-full md:w-[200px] bg-orange-100 flex items-center p-4 gap-3 shrink-0 justify-between md:justify-start border-b md:border-b-0 border-orange-200">
-          <div className="flex items-center gap-3">
-            <div className="text-orange-500 hidden sm:block">
-              <Clock size={32} />
+        <div className="w-full md:w-[150px] lg:w-[200px] bg-white flex items-center p-3 gap-2 shrink-0 justify-between md:justify-start border-b md:border-b-0 md:border-r border-gray-200">
+          <div className="flex items-center gap-2">
+            <div className="bg-orange-100 text-orange-500 hidden sm:flex items-center justify-center p-2 rounded-lg">
+              <Clock size={32} strokeWidth={2.5} />
             </div>
             <div className="leading-tight">
-              <div className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-800">{formatHeaderTime(now)}</div>
-              <div className="text-xs sm:text-sm font-medium text-gray-600 tracking-wider sm:mt-1">
+              <div className="text-2xl sm:text-3xl font-black tracking-tighter text-gray-900">{formatHeaderTime(now)}</div>
+              <div className="text-[10px] sm:text-xs font-bold text-gray-500 tracking-wider">
                 {formatHeaderDate(now)}
               </div>
             </div>
           </div>
-          <div className="flex bg-white rounded-lg border border-gray-300 p-1 shadow-sm md:hidden shrink-0">
+          <div className="flex bg-gray-100 rounded-lg border border-gray-300 p-1 md:hidden shrink-0">
             <button 
               onClick={() => setViewMode('ORDER')}
               className={`px-3 py-1 text-sm rounded flex items-center gap-1.5 font-bold transition-all ${
@@ -102,43 +116,37 @@ export default function App() {
           </div>
         </div>
 
-        <div className="flex-1 flex flex-wrap md:flex-nowrap items-center px-4 py-2 md:py-0 overflow-x-auto gap-2 md:gap-3">
-          {STATIONS.map((s) => {
-            const isActive = selectedStationIds.includes(s.id);
-            return (
-              <button
-                key={s.id}
-                onClick={() => {
-                  const el = document.getElementById(`station-btn-${s.id}`);
-                  if (el) {
-                    el.classList.add('scale-95');
-                    setTimeout(() => el.classList.remove('scale-95'), 100);
-                  }
+        <div className="flex-1 flex items-center px-4 py-3 md:py-0 overflow-x-auto bg-[#fff1e0]">
+          <div className="flex items-center gap-1 bg-white p-1.5 md:p-2 rounded-2xl shadow-sm border border-orange-100">
+            {STATIONS.map((s) => {
+              const isActive = selectedStationIds.includes(s.id);
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => {
+                    const el = document.getElementById(`station-btn-${s.id}`);
+                    if (el) {
+                      el.classList.add('scale-95');
+                      setTimeout(() => el.classList.remove('scale-95'), 100);
+                    }
 
-                  // Toggle active station
-                  let nextStations;
-                  if (isActive) {
-                    nextStations = selectedStationIds.filter(id => id !== s.id);
-                  } else {
-                    nextStations = [...selectedStationIds, s.id];
-                  }
-                  setStations(nextStations);
-                }}
-                id={`station-btn-${s.id}`}
-                className={`px-4 md:px-6 py-2 md:py-2.5 rounded-full font-bold text-sm md:text-lg transition-transform cursor-pointer tracking-wide shrink-0 relative ${
-                  isActive ? 'bg-red-600 text-white shadow-md hover:bg-red-700' : 'bg-transparent text-gray-600 hover:bg-gray-100 border border-transparent hover:border-gray-200'
-                }`}
-              >
-                {isActive && (
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 md:w-3 md:h-3 bg-green-400 border-2 border-white rounded-full animate-ping" />
-                )}
-                {s.name}
-              </button>
-            );
-          })}
+                    // Toggle active station
+                    let nextStations = [s.id];
+                    setStations(nextStations);
+                  }}
+                  id={`station-btn-${s.id}`}
+                  className={`px-4 md:px-6 py-1.5 md:py-2 rounded-full font-bold text-sm md:text-lg transition-transform cursor-pointer tracking-wide shrink-0 ${
+                    isActive ? 'bg-[#ef340f] text-white shadow' : 'bg-transparent text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  {s.name}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 pr-4 pl-4 md:pl-2 py-2 md:py-0 bg-gray-50 md:bg-white border-t md:border-t-0 border-gray-200 justify-end md:justify-start">
+        <div className="flex items-center gap-2 pr-4 pl-4 md:pl-2 py-2 md:py-0 bg-[#fff1e0] md:bg-[#fff1e0] border-t md:border-t-0 border-orange-200 justify-end md:justify-start">
           <button 
             onClick={togglePause}
             className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-3 rounded-lg shadow-sm text-sm sm:text-lg font-bold transition-colors shrink-0 ${
@@ -151,10 +159,10 @@ export default function App() {
           </button>
           
           <button 
-            onClick={() => setShowSelector(true)}
+            onClick={toggleFullScreen}
             className="p-2 sm:p-3 ml-1 sm:ml-2 hover:bg-gray-200 rounded-lg text-gray-600 hover:text-gray-900 border border-gray-300 md:border-2 shadow-sm transition-colors flex items-center shrink-0"
           >
-            <RefreshCcw size={20} className="sm:w-[28px] sm:h-[28px]" />
+            <Maximize size={20} className="sm:w-[28px] sm:h-[28px]" />
           </button>
           <button 
             onClick={() => setShowSettings(true)}
@@ -255,11 +263,17 @@ export default function App() {
               initial={{ opacity: 0, y: 50, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.9 }}
-              className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-gray-600 text-white px-5 py-3 rounded-lg shadow-xl flex items-center gap-4 z-50 text-sm font-medium animate-bounce"
+              className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black text-white px-5 py-3 shadow-xl flex items-center gap-6 z-50 text-base sm:text-lg font-bold"
             >
-              <span className="flex items-center gap-2">
-                {!activeToast.hideUndo && <span className="text-gray-300">已完成</span>}
-                {activeToast.hideUndo ? activeToast.message : activeToast.message.replace('已完成 ', '')}
+              <span className="flex items-center gap-3">
+                {activeToast.quantity && activeToast.itemName ? (
+                  <>
+                    <span className="border border-white rounded shrink-0 w-8 h-8 flex items-center justify-center font-bold text-lg">{activeToast.quantity}</span>
+                    <span className="tracking-wide">{activeToast.itemName} 已完成</span>
+                  </>
+                ) : (
+                  <span className="tracking-wide">{activeToast.message}</span>
+                )}
               </span>
               {!activeToast.hideUndo && (
                 <button 
@@ -269,9 +283,9 @@ export default function App() {
                       undoFulfillItem(activeToast.orderId, activeToast.itemId);
                     }
                   }}
-                  className="bg-white text-gray-700 hover:bg-gray-100 px-3 py-1 rounded flex items-center gap-1 transition-colors"
+                  className="bg-black text-white border border-white hover:bg-gray-800 px-4 py-1.5 rounded flex items-center gap-1 transition-colors shrink-0 whitespace-nowrap"
                 >
-                  <Undo2 size={14} /> 回復
+                  <Undo2 size={18} /> 回復狀態
                 </button>
               )}
             </motion.div>
@@ -292,7 +306,6 @@ export default function App() {
       </footer>
 
       {/* Overlays */}
-      {showSelector && <StationSelector onClose={() => setShowSelector(false)} />}
       {showSettings && <SettingsDialog onClose={() => setShowSettings(false)} />}
       <DebugPanel />
       
