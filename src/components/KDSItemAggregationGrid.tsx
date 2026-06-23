@@ -29,11 +29,11 @@ export const KDSItemAggregationGrid: React.FC = () => {
   }[settings.layout] || 6;
 
   const gridClasses = {
-    '3x1': 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
-    '3x2': 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
-    '4x1': 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4',
-    '4x2': 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4',
-  }[settings.layout] || 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
+    '3x1': 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
+    '3x2': 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
+    '4x1': 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
+    '4x2': 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
+  }[settings.layout] || 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
 
   // Compute aggregated items
   const aggregatedItems = useMemo(() => {

@@ -46,20 +46,44 @@ export default function App() {
     <div className="h-screen w-screen bg-gray-100 text-gray-800 flex flex-col overflow-hidden font-sans selection:bg-orange-200">
       
       {/* Top Header */}
-      <header className="h-[60px] bg-white border-b border-gray-300 flex items-stretch shrink-0">
-        <div className="w-[200px] bg-orange-100 flex items-center p-4 gap-3">
-          <div className="text-orange-500">
-            <Clock size={32} />
-          </div>
-          <div className="leading-tight">
-            <div className="text-3xl font-bold tracking-tight text-gray-800">{formatHeaderTime(now)}</div>
-            <div className="text-sm font-medium text-gray-600 tracking-wider mt-1">
-              {formatHeaderDate(now)}
+      <header className="min-h-[60px] bg-white border-b border-gray-300 flex flex-col md:flex-row items-stretch shrink-0">
+        <div className="w-full md:w-[200px] bg-orange-100 flex items-center p-4 gap-3 shrink-0 justify-between md:justify-start border-b md:border-b-0 border-orange-200">
+          <div className="flex items-center gap-3">
+            <div className="text-orange-500 hidden sm:block">
+              <Clock size={32} />
             </div>
+            <div className="leading-tight">
+              <div className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-800">{formatHeaderTime(now)}</div>
+              <div className="text-xs sm:text-sm font-medium text-gray-600 tracking-wider sm:mt-1">
+                {formatHeaderDate(now)}
+              </div>
+            </div>
+          </div>
+          <div className="flex bg-white rounded-lg border border-gray-300 p-1 shadow-sm md:hidden shrink-0">
+            <button 
+              onClick={() => setViewMode('ORDER')}
+              className={`px-3 py-1 text-sm rounded flex items-center gap-1.5 font-bold transition-all ${
+                viewMode === 'ORDER' 
+                  ? 'bg-gray-700 text-white shadow-sm' 
+                  : 'text-gray-600 bg-transparent'
+              }`}
+            >
+              <LayoutList size={16} /> 單
+            </button>
+            <button 
+              onClick={() => setViewMode('ITEM')}
+              className={`px-3 py-1 text-sm rounded flex items-center gap-1.5 font-bold transition-all ${
+                viewMode === 'ITEM' 
+                  ? 'bg-gray-700 text-white shadow-sm' 
+                  : 'text-gray-600 bg-transparent'
+              }`}
+            >
+              <Grip size={16} /> 品
+            </button>
           </div>
         </div>
 
-        <div className="flex-1 flex items-center px-4 overflow-x-auto gap-3">
+        <div className="flex-1 flex flex-wrap md:flex-nowrap items-center px-4 py-2 md:py-0 overflow-x-auto gap-2 md:gap-3">
           {STATIONS.map((s) => {
             const isActive = selectedStationIds.includes(s.id);
             return (
@@ -82,12 +106,12 @@ export default function App() {
                   setStations(nextStations);
                 }}
                 id={`station-btn-${s.id}`}
-                className={`px-6 py-2.5 rounded-full font-bold text-lg transition-transform cursor-pointer relative ${
-                  isActive ? 'bg-red-600 text-white shadow-md hover:bg-red-700' : 'bg-transparent text-gray-600 hover:bg-gray-100'
+                className={`px-4 md:px-6 py-2 md:py-2.5 rounded-full font-bold text-sm md:text-lg transition-transform cursor-pointer tracking-wide shrink-0 relative ${
+                  isActive ? 'bg-red-600 text-white shadow-md hover:bg-red-700' : 'bg-transparent text-gray-600 hover:bg-gray-100 border border-transparent hover:border-gray-200'
                 }`}
               >
                 {isActive && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 border-2 border-white rounded-full animate-ping" />
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 md:w-3 md:h-3 bg-green-400 border-2 border-white rounded-full animate-ping" />
                 )}
                 {s.name}
               </button>
@@ -95,28 +119,29 @@ export default function App() {
           })}
         </div>
 
-        <div className="flex items-center gap-3 pr-4 pl-2 bg-white">
+        <div className="flex items-center gap-2 pr-4 pl-4 md:pl-2 py-2 md:py-0 bg-gray-50 md:bg-white border-t md:border-t-0 border-gray-200 justify-end md:justify-start">
           <button 
             onClick={togglePause}
-            className={`flex items-center gap-2 px-5 py-3 rounded-lg shadow-sm text-lg font-bold transition-colors ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-3 rounded-lg shadow-sm text-sm sm:text-lg font-bold transition-colors shrink-0 ${
               isPaused ? 'bg-teal-500 text-white hover:bg-teal-600' : 'bg-[#e53935] text-white hover:bg-red-700'
             }`}
           >
-            {isPaused ? <PlayCircle size={22} /> : <PauseCircle size={22} />}
-            {isPaused ? `已暫停排入 | 待排 ${getFilteredCount('WAITLIST')} 張` : '持續排入中 | 點擊暫停'}
+            {isPaused ? <PlayCircle size={20} className="sm:w-[22px] sm:h-[22px]" /> : <PauseCircle size={20} className="sm:w-[22px] sm:h-[22px]" />}
+            <span className="hidden sm:inline">{isPaused ? `已暫停排入 | 待排 ${getFilteredCount('WAITLIST')} 張` : '持續排入中 | 點擊暫停'}</span>
+            <span className="sm:hidden">{isPaused ? '已暫停' : '排入中'}</span>
           </button>
           
           <button 
             onClick={() => setShowSelector(true)}
-            className="p-3 ml-2 hover:bg-gray-100 rounded-lg text-gray-600 hover:text-gray-900 border-2 border-gray-300 shadow-sm transition-colors flex items-center gap-2"
+            className="p-2 sm:p-3 ml-1 sm:ml-2 hover:bg-gray-200 rounded-lg text-gray-600 hover:text-gray-900 border border-gray-300 md:border-2 shadow-sm transition-colors flex items-center shrink-0"
           >
-            <RefreshCcw size={28} />
+            <RefreshCcw size={20} className="sm:w-[28px] sm:h-[28px]" />
           </button>
           <button 
             onClick={() => setShowSettings(true)}
-            className="p-3 ml-2 hover:bg-gray-100 rounded-lg text-gray-600 hover:text-gray-900 border-2 border-gray-300 shadow-sm transition-colors"
+            className="p-2 sm:p-3 ml-1 sm:ml-2 hover:bg-gray-200 rounded-lg text-gray-600 hover:text-gray-900 border border-gray-300 md:border-2 shadow-sm transition-colors shrink-0"
           >
-            <Settings size={28} />
+            <Settings size={20} className="sm:w-[28px] sm:h-[28px]" />
           </button>
         </div>
       </header>
@@ -137,7 +162,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* Sub Header (Tabs) */}
-      <div className="h-[60px] bg-gray-100 flex items-end px-4 border-b border-gray-300 gap-2 shrink-0">
+      <div className="bg-gray-100 flex items-end px-2 sm:px-4 border-b border-gray-300 gap-1 sm:gap-2 shrink-0 overflow-x-auto whitespace-nowrap pt-2 sm:h-[60px] sm:pt-0">
         {[
           { id: 'WAITLIST', label: '待排入區', icon: LayoutList, badge: getFilteredCount('WAITLIST') },
           { id: 'PREP', label: '製餐區', icon: Scissors, badge: getFilteredCount('PREP') },
@@ -146,16 +171,16 @@ export default function App() {
           <button
             key={tab.id}
             onClick={() => setCurrentTab(tab.id as 'WAITLIST' | 'PREP' | 'COMPLETED')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-t-xl font-bold text-lg transition-colors border-2 border-b-0 ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-t-xl font-bold text-sm sm:text-lg transition-colors border-2 border-b-0 shrink-0 ${
               currentTab === tab.id 
                 ? 'bg-white border-gray-300 text-gray-900 relative z-10 before:absolute before:-bottom-0.5 before:left-0 before:right-0 before:h-[3px] before:bg-white after:absolute after:-bottom-0.5 after:left-0 after:right-0 after:h-[3px] after:bg-red-500' 
                 : 'bg-white/50 border-gray-200 text-gray-500 hover:bg-gray-50'
             }`}
           >
-            <tab.icon size={22} className={currentTab === tab.id ? (tab.id === 'WAITLIST' ? 'text-amber-500' : tab.id === 'PREP' ? 'text-gray-700' : 'text-gray-400') : ''} />
+            <tab.icon size={20} className={`sm:w-[22px] sm:h-[22px] ${currentTab === tab.id ? (tab.id === 'WAITLIST' ? 'text-amber-500' : tab.id === 'PREP' ? 'text-gray-700' : 'text-gray-400') : ''}`} />
             {tab.label}
             {tab.badge > 0 && (
-              <span className="ml-2 bg-gray-700 text-white text-[14px] px-2.5 py-0.5 rounded-full font-black">
+              <span className="ml-1 sm:ml-2 bg-gray-700 text-white text-[12px] sm:text-[14px] px-2 sm:px-2.5 py-0.5 rounded-full font-black">
                 {tab.badge}
               </span>
             )}
@@ -164,10 +189,10 @@ export default function App() {
 
         <div className="flex-1" />
         
-        <div className="flex bg-white rounded-lg border-2 border-gray-300 p-1 mb-2 shadow-sm">
+        <div className="hidden md:flex bg-white rounded-lg border-2 border-gray-300 p-1 mb-2 shadow-sm shrink-0">
           <button 
             onClick={() => setViewMode('ORDER')}
-            className={`px-4 py-1.5 text-base rounded flex items-center gap-2 font-bold transition-all cursor-pointer ${
+            className={`px-3 sm:px-4 py-1 sm:py-1.5 text-sm sm:text-base rounded flex items-center gap-1.5 sm:gap-2 font-bold transition-all cursor-pointer ${
               viewMode === 'ORDER' 
                 ? 'bg-gray-700 text-white shadow-sm' 
                 : 'text-gray-600 hover:bg-gray-50'
@@ -177,7 +202,7 @@ export default function App() {
           </button>
           <button 
             onClick={() => setViewMode('ITEM')}
-            className={`px-4 py-1.5 text-base rounded flex items-center gap-2 font-bold transition-all cursor-pointer ${
+            className={`px-3 sm:px-4 py-1 sm:py-1.5 text-sm sm:text-base rounded flex items-center gap-1.5 sm:gap-2 font-bold transition-all cursor-pointer ${
               viewMode === 'ITEM' 
                 ? 'bg-gray-700 text-white shadow-sm' 
                 : 'text-gray-600 hover:bg-gray-50'
